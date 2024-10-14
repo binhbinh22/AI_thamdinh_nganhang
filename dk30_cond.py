@@ -42,6 +42,8 @@ def dk30(row):
         ln_value = float(str(ln_value).replace('tỷ đồng/năm', '').strip())
     except Exception as e:
         ln_value = 0.0 
+
+    kpt_value = str(row.get('KHOẢN PHẢI THU', ''))
     try:
         kpt_value = float(str(kpt_value).replace('tỷ đồng', '').strip())
     except:

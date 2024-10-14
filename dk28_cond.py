@@ -29,7 +29,11 @@ def dk28(row):
 
         if text:
             business_instance = chain_kpt.invoke({"input": text})
-            res = json.loads(business_instance)
+            try:
+                res = json.loads(business_instance.content)
+            except Exception as e:
+                print(e)
+                res = json.loads(business_instance)
             converted_data = convert_money(res)
             kpt_value_str = converted_data.get("khoản phải thu", "0")  
             if kpt_value_str == '':

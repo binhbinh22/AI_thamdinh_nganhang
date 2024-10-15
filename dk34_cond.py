@@ -14,7 +14,7 @@ import gc
 import re
 from langchain_core.prompts import ChatPromptTemplate
 from log import *
- 
+import config
 prompt_34 = ChatPromptTemplate.from_messages(
     [
         (

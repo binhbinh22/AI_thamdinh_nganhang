@@ -1,4 +1,4 @@
-model_emb = 'https://huggingface.co/dangvantuan/vietnamese-embedding' 
+model_emb = 'dangvantuan/vietnamese-embedding' 
 # llm_text  = 'llama3.1'
 llm_text = 'llama3'
 llm_number = 'llama3'

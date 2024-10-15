@@ -42,7 +42,7 @@ prompt_34 = ChatPromptTemplate.from_messages(
         ("human", "{input}"),
     ]
 )
-llm_34 = ChatOllama(model='llama3.1',format = 'json',temperature=0.2,base_url='http://10.233.85.97:11434')
+llm_34 = ChatOllama(model='llama3.1',format = 'json',temperature=0.2,base_url=config.port)
 chain_34 = prompt_34 | llm_34
  
 # ======================================MAIN-FUNCTION===================================

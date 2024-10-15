@@ -52,7 +52,7 @@ prompt_kpt = ChatPromptTemplate.from_messages(
         ("human", "{input}"),
     ]
 )
-llama = OllamaLLM(model=config.llm_number,format = 'json',temperature=0,base_url='http://10.233.85.97:11434')
+llama = OllamaLLM(model=config.llm_number,format = 'json',temperature=0,base_url=config.port)
 
 chain_kpt = prompt_kpt | llama
 dict_nltc = {

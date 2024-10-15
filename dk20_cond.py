@@ -61,7 +61,7 @@ prompt_20 = PromptTemplate(
     partial_variables={"format_instructions_20": format_instructions_20},
 )
  
-llm_20=ChatOllama(model=config.llm_text, format = 'json', temperature=0.2, base_url='http://10.233.85.97:11434')
+llm_20=ChatOllama(model=config.llm_text, format = 'json', temperature=0.2, base_url=config.port)
 chain_20 = prompt_20 | llm_20
  
 dict_nltc = {

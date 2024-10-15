@@ -61,7 +61,7 @@ prompt_20 = PromptTemplate(
     partial_variables={"format_instructions_20": format_instructions_20},
 )
  
-llm_20=ChatOllama(model=config.llm_text, format = 'json', temperature=0.2, base_url='http://10.233.85.97:11434',keep_alive='-1')
+llm_20=ChatOllama(model=config.llm_text, format = 'json', temperature=0.2, base_url='http://10.233.85.97:11434')
 chain_20 = prompt_20 | llm_20
  
 dict_nltc = {
@@ -135,9 +135,9 @@ def dk20(row):
  
         text = text1 + '\n' + text2
         empty_attributes, res = process_business(text)
-        if  row['KHOẢN PHẢI THU'] == 'Không có thông tin' or row['LỢI NHUẬN'] == '' :
+        if  row['KHOẢN PHẢI THU'] == 'Không có thông tin' or row['KHOẢN PHẢI THU'] == '' :
             empty_attributes=empty_attributes + ', ' + 'khoản phải thu'
-        if  row['HÀNG TỒN KHO'] == 'Không có thông tin' or row['LỢI NHUẬN'] == '' :
+        if  row['HÀNG TỒN KHO'] == 'Không có thông tin' or row['HÀNG TỒN KHO'] == '' :
             empty_attributes=empty_attributes + ', ' + 'hàng tồn kho'
         if  row['LỢI NHUẬN'] == 'Không có thông tin' or row['LỢI NHUẬN'] == '' :
             empty_attributes=empty_attributes + ', ' + 'lợi nhuận'
@@ -154,9 +154,10 @@ def dk20(row):
         if re.search(r'lưu kho', text, re.IGNORECASE):
             row["KHO HÀNG"] = "lưu kho"
             empty_attributes= re.sub(r'kho hàng,','')
-        if not re.search(r'Kho hàng', text, re.IGNORECASE):
-            row["KHO HÀNG"] = None
-            empty_attributes = empty_attributes + ', ' + 'kho hàng'
+        if row["KHO HÀNG"] == 'kho hàng':
+            if not re.search(r'kho hàng', text, re.IGNORECASE):
+                row["KHO HÀNG"] = None
+                empty_attributes = empty_attributes + ', ' + 'kho hàng'
         if re.search(r'không có',str(row["KHO HÀNG"]), re.IGNORECASE):
             row['KHO HÀNG'] = None 
             empty_attributes = empty_attributes + ', ' + 'kho hàng'

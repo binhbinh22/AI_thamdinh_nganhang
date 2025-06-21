@@ -93,7 +93,7 @@ def process_row(row):
 
 
     
-def run(df: pd.DataFrame) -> pd.DataFrame:
+def run(dt: pd.DataFrame) -> pd.DataFrame:
     try:
         columns_to_initialize = ['DK113', 'DK114', 'DK115', 'DK116', 'DK117', 'DK118', 'DK119', 
                                   'DK120','DK121', 'DK122', 'DK123', 'DK124', 'DK125', 'DK126', 'GIAI_PHAP']

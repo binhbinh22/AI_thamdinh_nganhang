@@ -11,7 +11,7 @@ from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 import unicodedata
-
+import config
 ## ==============SCHEMA===================================
 # Schema for structured response
 response_schemas_20 = [
@@ -69,7 +69,7 @@ prompt_20 = PromptTemplate(
     input_variables=["text"],
     partial_variables={"format_instructions_20": format_instructions_20},
 )
-llm_20=ChatOllama(model=model_llm, format = 'json', temperature=0, base_url=base_url,keep_alive = -1)
+llm_20=ChatOllama(model=config.model_llm, format = 'json', temperature=0, base_url=config.base_url,keep_alive = -1)
 chain_20 = prompt_20 | llm_20
  
 dict_nltc = {

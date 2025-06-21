@@ -1,5 +1,3 @@
 model_emb = 'model_emb' 
-# llm_text  = 'llama3.1'
-llm_text = 'llama3'
-llm_number = 'llama3'
-port = '127.0.0.1:11434'
+model_llm = 'llama3'
+base_url = '127.0.0.1:11434'

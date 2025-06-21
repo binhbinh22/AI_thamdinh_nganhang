@@ -109,7 +109,7 @@ prompt = PromptTemplate(
 
 
 
-llama = OllamaLLM(model=config.llm_text,format = 'json',temperature=0,base_url=config.port)
+llama = OllamaLLM(model=config.model_llm,format = 'json',temperature=0,base_url=config.base_url)
 # llama = ChatOllama(model="llama3.1",format = 'json',temperature=0,base_url='http://10.233.85.97:11434')
 chain = prompt | llama
 

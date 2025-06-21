@@ -2,8 +2,8 @@ from fastapi import FastAPI, File, UploadFile
 import pandas as pd
 from io import BytesIO
 from fastapi.responses import StreamingResponse
-from src.dk28_cond import *
-from src.dk30_cond import *
+from src.dk116_cond import *
+from src.dk118_cond import *
 from src.convert_money import *
 from src.dk114_cond import *
 from src.dk34_cond import *
@@ -93,7 +93,7 @@ def process_row(row):
 
 
     
-def run(df: pd.DataFrame) -> pd.DataFrame:
+def run(dt: pd.DataFrame) -> pd.DataFrame:
     try:
         columns_to_initialize = ['DK113', 'DK114', 'DK115', 'DK116', 'DK117', 'DK118', 'DK119', 
                                   'DK120','DK121', 'DK122', 'DK123', 'DK124', 'DK125', 'DK126', 'GIAI_PHAP']

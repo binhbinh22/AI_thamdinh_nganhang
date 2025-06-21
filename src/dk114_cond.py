@@ -5,18 +5,13 @@ import logging
 import ast
 import re
 import pandas as pd
-
-from pydantic import BaseModel, Field  # Sử dụng pydantic v2 trực tiếp
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
-from langchain_ollama import ChatOllama  # Import từ langchain-ollama thay vì langchain_community
-from langchain_ollama.llms import OllamaLLM
-from langchain_experimental.llms.ollama_functions import OllamaFunctions  # type: ignore
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-
-from log import *
-import pandas as pd
+from langchain_community.chat_models import ChatOllama
+from langchain_core.prompts import ChatPromptTemplate
+import unicodedata
 import config
- 
 ## ==============SCHEMA===================================
 # Schema for structured response
 response_schemas_20 = [
@@ -26,44 +21,55 @@ response_schemas_20 = [
     ),
     ResponseSchema(
         name="địa điểm",
-        description="Địa điểm kinh doanh, địa chỉ doanh nghiệp của khách hàng, nếu không có thông tin hãy trả về ''.",
-    ),
+        description="Địa điểm kinh doanh, địa chỉ doanh nghiệp của khách hàng, nếu không có thông tin hãy trả về ''."),
     ResponseSchema(
-        name="kinh nghiệm",
-        description="Số năm kinh nghiệm buôn bán, thâm niên kinh doanh quản lý",
+        name="thời gian kinh doanh",
+        description="thời gian, kinh nghiệm, thâm niên hoạt động sản xuất kinh doanh của khách hàng",
+        # description="kinh nghiệm, thâm niên, thời gian kinh doanh quản lý, buôn bán",
     ),
     ResponseSchema(
         name="phương thức thanh toán",
-        description="Phương thức thanh toán tiền mặt,trích công nợ, chính sách công nợ...",
+        description="có thông tin phương thức thanh toán tiền mặt,trích công nợ, chính sách công nợ...",
     ),
+
     ResponseSchema(
         name="phương thức mua bán",
-        description="Các loại hình buôn bán: Bán lẻ, bán buôn, bán sỉ, buôn chuyến...",
+        description="có thông tin các loại hình buôn bán: Bán lẻ, bán buôn, bán sỉ, buôn chuyến...",
     ),
     ResponseSchema(
         name="kho hàng",
-        description="Loại kho lưu trữ: Kho hàng, kho lạnh, lưu kho, xưởng, nhà riêng,...",
+        description="có thông tin địa chỉ hoặc diện tích kho hàng hoặc cách thức lưu sản phẩm, mặt hàng của khách hàng",
     ),
+    ResponseSchema(
+        name="đầu vào",
+        description="Nguồn cung ứng hàng hóa, nguyên vật liệu, thông tin nhà cung cấp, địa điểm nhập hàng hoặc cách thức nhập hàng. Nếu không có thông tin, hãy trả về ''.",
+    ),   
+    ResponseSchema(
+        name="đầu ra",
+        description="Thông tin về nơi tiêu thụ sản phẩm, khách hàng mục tiêu, thị trường phân phối hoặc địa điểm bán hàng. Nếu không có thông tin, hãy trả về ''.",
+    )
 ]
- 
-# ================================MODEL=========================
- 
+
+# ================================MODEL=========================  
+
 output_parser_20 = StructuredOutputParser.from_response_schemas(response_schemas_20)
 format_instructions_20 = output_parser_20.get_format_instructions()
 prompt_20 = PromptTemplate(
     template="""
-    Bạn là chuyên gia AI trong lĩnh vực kinh doanh.
-    Hãy trích xuất thông tin theo từng thuộc tính trong đoạn văn bản sau.
-    Hãy đưa ra thông tin chính xác nhất.
-    Nếu không có thông tin của các thuộc tính, hoặc không chắc chắn, hãy trả về ''.
-    Văn bản: {text}
-    {format_instructions_20}""",
+    Bạn là chuyên gia trong lĩnh vực ngân hàng, đang thực hiện thẩm định hồ sơ vay vốn của một hộ kinh doanh hoặc doanh nghiệp.
+    
+    Nhiệm vụ của bạn là trích xuất thông tin tương ứng với từng thuộc tính bên dưới từ đoạn văn bản đầu vào. 
+    Vui lòng tìm kiếm thông tin chính xác nhất. Nếu không có thông tin hoặc không chắc chắn, hãy trả về '' (chuỗi rỗng).
+    
+    Văn bản đầu vào: 
+    {text}
+    
+    {format_instructions_20}
+    """,
     input_variables=["text"],
     partial_variables={"format_instructions_20": format_instructions_20},
 )
- 
-llm_20=ChatOllama(model=config.llm_text, format = 'json', temperature=0.2, base_url=config.port,keep_alive='5s')
-
+llm_20=ChatOllama(model=config.model_llm, format = 'json', temperature=0, base_url=config.base_url,keep_alive = -1)
 chain_20 = prompt_20 | llm_20
  
 dict_nltc = {
@@ -138,16 +144,20 @@ def process_business(text):
  
     return empty_attributes, res
  
+# ====================================MAIN-FUNCTION=============================
 def DK114(row):
 
     try:
         #     row["GIẢI PHÁP"] = ""
+
         row["MẶT HÀNG KD"] = ""
         row["ĐỊA ĐIỂM"] = ""
         row["KINH NGHIỆM"] = ""
         row["PT THANH TOÁN"] = ""
-        row["PT MUA BÁN"] = ""
+        row["PT BÁN HÀNG"] = ""
         row["KHO HÀNG"] = ""
+        row["ĐẦU VÀO"] = ""
+        row["ĐẦU RA"] = ""
         
         text1 = str(row['PTK1']) 
         text2 = str(row['PTK2'])
@@ -157,14 +167,14 @@ def DK114(row):
             text2=''
 
         text = text1 + '\n' + text2
-        
+        text = text.replace('hàng tồn kho', '')
         empty_attributes, res = process_business(text)
         
         if  row['KHOẢN PHẢI THU'] == 'Không có thông tin' or row['KHOẢN PHẢI THU'] == '' :
-            empty_attributes=empty_attributes + ', ' + 'khoản phải thu'
+            empty_attributes=empty_attributes + ', ' + 'giá trị phải thu'
             
         if  row['HÀNG TỒN KHO'] == 'Không có thông tin' or row['HÀNG TỒN KHO'] == '' :
-            empty_attributes=empty_attributes + ', ' + 'hàng tồn kho'
+            empty_attributes=empty_attributes + ', ' + 'giá trị tồn kho'
         
         if  row['LỢI NHUẬN'] == 'Không có thông tin' or row['LỢI NHUẬN'] == '' :
             empty_attributes=empty_attributes + ', ' + 'lợi nhuận'
@@ -174,39 +184,90 @@ def DK114(row):
             
 #         if (row["DOANH THU"] == '') and (row['LỢI NHUẬN'] == ''):
 #             empty_attributes = empty_attributes + ', ' + 'doanh thu'+ ', '+ 'lợi nhuận'
-        
+        # print(res)
         row["MẶT HÀNG KD"] = str(res.get("mặt hàng kinh doanh", ""))
         row["ĐỊA ĐIỂM"] = str(res.get("địa điểm", ""))
-        row["KINH NGHIỆM"] = str(res.get("kinh nghiệm", ""))
+        row["KINH NGHIỆM"] = str(res.get("thời gian kinh doanh", ""))
         row["PT THANH TOÁN"] = str(res.get("phương thức thanh toán", ""))
-        row["PT MUA BÁN"] = str(res.get("phương thức mua bán", "")) 
+        row["PT BÁN HÀNG"] = str(res.get("phương thức mua bán", "")) 
         row["KHO HÀNG"] = str(res.get("kho hàng", ""))
+        row["ĐẦU VÀO"] = str(res.get("đầu vào", ""))
+        row["ĐẦU RA"] = str(res.get("đầu ra", ""))
         
-        if re.search(r'lưu kho', text, re.IGNORECASE):
-            row["KHO HÀNG"] = "lưu kho"
-            empty_attributes= re.sub(r'kho hàng,',',',empty_attributes)
-        if row["KHO HÀNG"] == 'kho hàng' or row["KHO HÀNG"] == 'Kho hàng':
+#         #lưu kho
+#         if re.search(r'lưu kho', text, re.IGNORECASE):
+#             # Tìm vị trí bắt đầu của "lưu kho"
+#             match = re.search(r'lưu kho', text, re.IGNORECASE)
+#             if match:
+#                 start = match.end()  # Vị trí sau cụm "lưu kho"
+#                 # Lấy phần còn lại của text sau "lưu kho"
+#                 after_text = text[start:].strip()
+#                 # Tách 7 từ tiếp theo
+#                 words = after_text.split()
+#                 kho_hang_info = ' '.join(words[:7])
+#                 row["KHO HÀNG"] = f"lưu kho {kho_hang_info}"
+
+#             # Cập nhật empty_attributes
+#             empty_attributes = re.sub(r'kho hàng,', ',', empty_attributes)
+            
+        #kho hàng
+        if re.search(r'kho tại', text, re.IGNORECASE):
+            # Tìm vị trí bắt đầu của "lưu kho"
+            match = re.search(r'kho tại', text, re.IGNORECASE)
+            if match:
+                start = match.end()  # Vị trí sau cụm "lưu kho"
+                # Lấy phần còn lại của text sau "lưu kho"
+                after_text = text[start:].strip()
+                # Tách 7 từ tiếp theo
+                words = after_text.split()
+                kho_hang_info = ' '.join(words[:7])
+                row["KHO HÀNG"] = f"kho tại {kho_hang_info}"
+
+            # Cập nhật empty_attributes
+            empty_attributes = re.sub(r'kho hàng,', ',', empty_attributes)
+        #=======================
+        elif row["KHO HÀNG"] == 'kho hàng' or row["KHO HÀNG"] == 'Kho hàng':
             if not re.search(r'Kho hàng', text, re.IGNORECASE):
-                row["KHO HÀNG"] = None
+                row["KHO HÀNG"] = ''
                 empty_attributes = empty_attributes + ', ' + 'kho hàng'
-        if re.search(r'không có',str(row["KHO HÀNG"]), re.IGNORECASE):
-            row['KHO HÀNG'] = None 
+        elif re.search(r'không có',str(row["KHO HÀNG"]), re.IGNORECASE):
+            row['KHO HÀNG'] = ''
             empty_attributes = empty_attributes + ', ' + 'kho hàng'
             
-        if pd.isna(row['KHO HÀNG']):
+        elif pd.isna(row['KHO HÀNG']):
             if re.search(r'ại cơ sở kinh doanh của khách hàng', text, re.IGNORECASE):
                 row["KHO HÀNG"] = "tại cơ sở kinh doanh"
                 empty_attributes= re.sub(r'kho hàng,',',',empty_attributes)
-            
+                
+        kho_hang_keyword = row.get("KHO HÀNG", "")
+        
+        if kho_hang_keyword and re.search(kho_hang_keyword, text, re.IGNORECASE):
+            match = re.search(kho_hang_keyword, text, re.IGNORECASE)
+            if match:
+                start = match.end()
+                after_text = text[start:].strip()
+                words = after_text.split()
+                seven_words_after = ' '.join(words[:7])
+                # print(f"7 từ sau '{kho_hang_keyword}': {seven_words_after}")
+                row["KHO HÀNG"] = f"{kho_hang_keyword} {seven_words_after}"
+
+        # kinh nghiệm 
+        if pd.isna(row['KINH NGHIỆM']):
+            if re.search(r'lâu năm', text, re.IGNORECASE):
+                row['KINH NGHIỆM'] = 'lâu năm'
+                empty_attributes= re.sub(r'kinh nghiệm,',',',empty_attributes)
+
         if empty_attributes:
+            row["DK114"] = f'FAIL'
             return f"""-Chưa thỏa mãn điều kiện 114 Đề nghị RM bổ sung các thông tin: \n{empty_attributes}"""
 
         if all_values_not_null(res):
+            row["DK114"] = "PASS"
             return None
 #         return row
 
         
     except Exception as e:
-        logger.error(f"An error occurred in DK114: {e}")
-        row["DK114"] = None
+        logger.error(f"An error occurred in DK20: {e}")
+        row["DK114"] = "FAIL"
         return None

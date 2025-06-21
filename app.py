@@ -2,8 +2,8 @@ from fastapi import FastAPI, File, UploadFile
 import pandas as pd
 from io import BytesIO
 from fastapi.responses import StreamingResponse
-from src.dk28_cond import *
-from src.dk30_cond import *
+from src.dk116_cond import *
+from src.dk118_cond import *
 from src.convert_money import *
 from src.dk114_cond import *
 from src.dk34_cond import *

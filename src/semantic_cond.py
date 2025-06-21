@@ -34,32 +34,39 @@ def similarity_phrase_hs(text, query, model):
         return None
 
     except Exception as e:
-        logger.error(f"An error occurred in DK32: {e}")
+        logger.error(f"An error occurred in haisan: {e}")
         return None
     
 def DK120(row):
     row['CT120'] = None
     text1 = str(row.get('PTK1', ''))
     text2 = str(row.get('PTK2', ''))
-
-
-#     text1 = str(row['PTK1']) 
-#     text2 = str(row['PTK2'])
-    
     if 0 < len(text1.split()) < 50:
         text1=''
     if 0 < len(text2.split()) < 50:
         text2 = ''
     text = text1 + '\n' +text2
-    ptk = text
+    ptk = text.lower()
+    if len(ptk) < 10:
+        row['DK120'] = 'PASS'
+        return None  
     query = 'thu mua thuỷ hải sản tôm'
     most_similar_phrase = similarity_phrase_hs(ptk,query, model)
-    if similarity_phrase_hs(ptk,query, model):
-        row['CT120'] = most_similar_phrase
-        row['DK120'] = 'False' 
+    if re.search(r'thu mua hải sản', ptk, re.IGNORECASE) or re.search(r'tôm cá', ptk, re.IGNORECASE) or re.search(r'tôm', row['MẶT HÀNG KD'], re.IGNORECASE) or re.search(r'hải sản', row['MẶT HÀNG KD'], re.IGNORECASE):
+        row['CT120'] = 'hải sản'
+        row['DK120'] = 'FAIL'
         return '''-Chưa thỏa mãn điều kiện 120 Lĩnh vực thu mua hải
         sản: Khách hàng sẽ phải ứng trước khoản tiền cho bên bán cho các ghe thuyền => Có thể ghi nhận vào khoản phải thu để căn cứ tính hạn mức'''
-    row['DK120'] = 'Pass'
+    elif similarity_phrase_hs(ptk,query, model):
+        row['CT120'] = most_similar_phrase
+        if re.search(r'cá nhân', most_similar_phrase, re.IGNORECASE):
+            row['CT120'] = None
+            row['DK120'] = 'PASS'
+            return None
+        row['DK120'] = 'FAIL' 
+        return '''-Chưa thỏa mãn điều kiện 120 Lĩnh vực thu mua hải
+        sản: Khách hàng sẽ phải ứng trước khoản tiền cho bên bán cho các ghe thuyền => Có thể ghi nhận vào khoản phải thu để căn cứ tính hạn mức'''
+    row['DK120'] = 'PASS'
     return None    
 
 
@@ -109,11 +116,14 @@ def DK121(row):
             text2 = ''
         text = text1 + '\n' +text2
         ptk = text
+        if len(ptk) < 10:
+            row['DK121'] = 'PASS'
+            return None  
         query = 'trùng địa chỉ kinh doanh'
         # Kiểm tra điều kiện 'cùng địa chỉ'
         if re.search(r'cùng địa chỉ', ptk, re.IGNORECASE):
             row['CT121'] = 'cùng địa chỉ kinh doanh'
-            row['DK121'] = 'False'
+            row['DK121'] = 'FAIL'
             return '''-Chưa thỏa mãn điều kiện 121 ĐVKD làm rõ nguyên nhân: vì sao địa điểm KD trùng với cá nhân/hộ gia đình/tổ chức khác. KH và cá nhân/hộ gia đình/tổ chức khác có mối quan hệ như thế nào?
             CIC của bên có liên quan. Đánh giá có mượn kho/cơ sở kinh doanh hay không ?'''
 
@@ -137,21 +147,20 @@ def DK121(row):
                 if 'không' in prior_words:
                     print('okeoke')
                     row['CT121'] = None
-                    row['DK121'] = 'Pass'
+                    row['DK121'] = 'PASS'
                     return None
             if re.search(r'liền', most_similar_phrase, re.IGNORECASE) or re.search(r'lai', most_similar_phrase, re.IGNORECASE):
                 row['CT121'] = None
-                row['DK121'] = 'Pass'
+                row['DK121'] = 'PASS'
                 return None
             return '''-Chưa thỏa mãn điều kiện 121 ĐVKD làm rõ nguyên nhân: vì sao địa điểm KD trùng với cá nhân/hộ gia đình/tổ chức khác. KH và cá nhân/hộ gia đình/tổ chức khác có mối quan hệ như thế nào?
             CIC của bên có liên quan. Đánh giá có mượn kho/cơ sở kinh doanh hay không ?'''
         
         # Nếu không thỏa mãn điều kiện nào, gán giá trị None
-        row['DK121'] = 'Pass'
+        row['DK121'] = 'PASS'
         return None
     except Exception as e:
         # Ghi log lỗi nếu có sự cố
         logger.error(f"An error occurred in DK33: {e}")
-        row['DK121'] = 'Pass'
+        row['DK121'] = 'PASS'
         return None
- 

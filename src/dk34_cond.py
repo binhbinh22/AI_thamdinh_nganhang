@@ -62,7 +62,7 @@ prompt_34 = ChatPromptTemplate.from_messages(
     ]
 )
 # llm_34 = ChatOllama(model=config.llm_text,format = 'json',temperature=0.2,base_url=config.port)
-llm_34 = OllamaLLM(model=config.llm_text,format = 'json',temperature=0.2,base_url=config.port)
+llm_34 = OllamaLLM(model=config.model_llm,format = 'json',temperature=0.2,base_url=config.base_url)
 
 chain_34 = prompt_34 | llm_34
 # ======================================MAIN-FUNCTION===================================

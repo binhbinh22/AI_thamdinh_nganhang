@@ -12,7 +12,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 import unicodedata
 import config
-from src.log import *
+from src.log import api_logger as logger
 
 ## ==============SCHEMA===================================
 # Schema for structured response

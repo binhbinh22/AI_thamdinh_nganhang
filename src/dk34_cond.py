@@ -17,7 +17,7 @@ import ast
 import gc
 import re
 from langchain_core.prompts import ChatPromptTemplate
-from src.log import *
+from src.log import api_logger as logger
 import config
 # llm_34 = ChatOllama(model="ghostx8b",format = 'json',temperature=0.2,base_url='http://10.233.85.97:11434')
 prompt_34 = ChatPromptTemplate.from_messages(

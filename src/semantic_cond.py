@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import config
 model = SentenceTransformer(config.model_emb)
-from log import *
+from src.log import api_logger as logger
 #=======================THU MUA HAI SAN===============================
  
 def similarity_phrase_hs(text, query, model):

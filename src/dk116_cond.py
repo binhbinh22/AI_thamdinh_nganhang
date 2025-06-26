@@ -7,7 +7,7 @@ import sys
 
 sys.path.append(os.getcwd())
 from src.convert_money import *
-from log import *
+from src.log import *
 import config
 def DK116(row):
     try:

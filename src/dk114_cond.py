@@ -12,6 +12,8 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 import unicodedata
 import config
+from src.log import *
+
 ## ==============SCHEMA===================================
 # Schema for structured response
 response_schemas_20 = [
@@ -130,8 +132,8 @@ def process_business(text):
     if res.get("kinh nghiệm", "").lower() == "không có thông tin":
         res["kinh nghiệm"] == ""
     list_kn = ["kinh nghiệm", "thâm niên"]
-    if ((res.get("kinh nghiệm", "") == "")) and any(i in text.lower() for i in list_kn):
-        res["kinh nghiệm"] = "Có kinh nghiệm kinh doanh"
+    # if ((res.get("kinh nghiệm", "") == "")) and any(i in text.lower() for i in list_kn):
+    #     res["kinh nghiệm"] = "Có kinh nghiệm kinh doanh"
  
     empty_attributes = find_empty_attributes(res)
  
@@ -167,7 +169,7 @@ def DK114(row):
             text2=''
 
         text = text1 + '\n' + text2
-        text = text.replace('hàng tồn kho', '')
+        text = text.replace('hàng tồn kho', '') # k bị bắt nhầm với kho hàng
         empty_attributes, res = process_business(text)
         
         if  row['KHOẢN PHẢI THU'] == 'Không có thông tin' or row['KHOẢN PHẢI THU'] == '' :
@@ -193,22 +195,6 @@ def DK114(row):
         row["KHO HÀNG"] = str(res.get("kho hàng", ""))
         row["ĐẦU VÀO"] = str(res.get("đầu vào", ""))
         row["ĐẦU RA"] = str(res.get("đầu ra", ""))
-        
-#         #lưu kho
-#         if re.search(r'lưu kho', text, re.IGNORECASE):
-#             # Tìm vị trí bắt đầu của "lưu kho"
-#             match = re.search(r'lưu kho', text, re.IGNORECASE)
-#             if match:
-#                 start = match.end()  # Vị trí sau cụm "lưu kho"
-#                 # Lấy phần còn lại của text sau "lưu kho"
-#                 after_text = text[start:].strip()
-#                 # Tách 7 từ tiếp theo
-#                 words = after_text.split()
-#                 kho_hang_info = ' '.join(words[:7])
-#                 row["KHO HÀNG"] = f"lưu kho {kho_hang_info}"
-
-#             # Cập nhật empty_attributes
-#             empty_attributes = re.sub(r'kho hàng,', ',', empty_attributes)
             
         #kho hàng
         if re.search(r'kho tại', text, re.IGNORECASE):
@@ -252,10 +238,16 @@ def DK114(row):
                 row["KHO HÀNG"] = f"{kho_hang_keyword} {seven_words_after}"
 
         # kinh nghiệm 
-        if pd.isna(row['KINH NGHIỆM']):
+        if pd.isna(row['KINH NGHIỆM']): # k có kinh nghiệm mới bắt lâu năm
             if re.search(r'lâu năm', text, re.IGNORECASE):
-                row['KINH NGHIỆM'] = 'lâu năm'
-                empty_attributes= re.sub(r'kinh nghiệm,',',',empty_attributes)
+                if not re.search(r'kinh nghiệm', text, re.IGNORECASE):
+                    row['KINH NGHIỆM'] = ''
+                else:
+                    row['KINH NGHIỆM'] = 'lâu năm'
+                    empty_attributes= re.sub(r'kinh nghiệm,',',',empty_attributes)
+
+        if len(empty_attributes) < 5:
+            empty_attributes = ''
 
         if empty_attributes:
             row["DK114"] = f'FAIL'

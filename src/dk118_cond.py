@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.getcwd())
-from log import *
+from src.log import *
 from src.convert_money import *
 from kpt import *
 from htk_dt_ln import *
